@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local agent tooling
+.agents/
+.claude/
+.freebuff/
+.windsurf/
+skills-lock.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
