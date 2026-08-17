@@ -1,26 +1,70 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --radius-2xl: 0px;
+  --radius-xl: 0px;
+  --radius-lg: 0px;
+  --radius-md: 0px;
+  --radius-sm: 0px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #f4f6fb;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --muted: #eef1f7;
+  --muted-foreground: #64748b;
+  --accent: #eef2ff;
+  --accent-foreground: #4338ca;
+  --border: #e2e8f0;
+  --destructive: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+}
+
+.dark {
+  --background: #0b1120;
+  --foreground: #e2e8f0;
+  --card: #111a2c;
+  --card-foreground: #e2e8f0;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #a5b4fc;
+  --border: #1e293b;
+  --destructive: #f87171;
+  --success: #4ade80;
+  --warning: #fbbf24;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+@keyframes skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
