@@ -12,8 +12,19 @@ function normalizeBaseUrl(url?: string): string | undefined {
 
 const baseURL = normalizeBaseUrl(process.env.BETTER_AUTH_URL);
 
-const trustedOrigins = ["http://localhost:3000"];
-if (baseURL) trustedOrigins.push(baseURL);
+// Trust the origin the request actually came from. The static list below only
+// ever contained localhost + whatever BETTER_AUTH_URL resolved to, so in
+// production every sign-in from the real domain was rejected with
+// INVALID_ORIGIN (403). Deriving the origin from the request covers the custom
+// domain, vercel.app previews, and local dev automatically.
+const trustedOrigins: (request?: Request) => Promise<Array<string | null | undefined>> = async (request) => {
+  if (!request) return [];
+  try {
+    return [new URL(request.url).origin];
+  } catch {
+    return [];
+  }
+};
 
 export const auth = betterAuth({
   appName: "Academic Atelier",
@@ -42,6 +53,9 @@ export const auth = betterAuth({
       },
     },
   },
+  // Extra origins (e.g. a staging domain) can be added via the
+  // BETTER_AUTH_TRUSTED_ORIGINS env var (comma-separated) — better-auth
+  // merges that in natively.
   trustedOrigins,
   rateLimit: {
     enabled: true,
