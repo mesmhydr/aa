@@ -423,6 +423,8 @@ model Department {
   courseOfferings            CourseOffering[]
   studentSemesterEnrollments StudentSemesterEnrollment[]
   sections                   Section[]
+
+  @@index([institutionId])
 }
 
 model Program {
@@ -446,6 +448,7 @@ model Program {
   programSpecificOutcomes ProgramSpecificOutcome[]
 
   @@index([departmentId])
+  @@index([institutionId])
 }
 
 model Batch {
@@ -466,6 +469,7 @@ model Batch {
 
   @@unique([programId, admissionYear])
   @@index([institutionId])
+  @@index([schemeId])
 }
 
 model AcademicYear {
@@ -484,6 +488,8 @@ model AcademicYear {
   feeStructures     FeeStructure[]
   announcements     Announcement[]
   calendarEvents    CalendarEvent[]
+
+  @@index([institutionId])
 }
 
 model Scheme {
@@ -503,6 +509,8 @@ model Scheme {
   batches  Batch[]
   programs SchemeProgram[]
   grades   Grade[]
+
+  @@index([institutionId])
 }
 
 model SchemeProgram {
@@ -639,6 +647,7 @@ model CourseOffering {
   @@index([academicSemesterId])
   @@index([courseId])
   @@index([departmentId])
+  @@index([courseId, academicSemesterId])
 }
 
 model FacultyAssignment {
@@ -657,6 +666,7 @@ model FacultyAssignment {
 
   @@unique([courseOfferingId, facultyId, role])
   @@index([facultyId])
+  @@index([academicSemesterId])
 }
 
 model CourseRegistration {
@@ -718,6 +728,8 @@ model session {
   userAgent String?
   userId    String
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model account {
@@ -735,6 +747,9 @@ model account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([providerId, accountId])
 }
 
 model verification {
@@ -870,6 +885,7 @@ model Student {
   @@index([programId])
   @@index([batchId])
   @@index([status])
+  @@index([schemeId])
 }
 
 model StudentProfile {
@@ -975,6 +991,8 @@ model Staff {
   isActive     Boolean     @default(true)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
+
+  @@index([departmentId])
 }
 
 model Section {
@@ -1016,6 +1034,7 @@ model StudentSemesterEnrollment {
   @@index([departmentId])
   @@index([sectionId])
   @@index([studentId, isActive])
+  @@index([schemeId])
 }
 
 model AttendanceRule {
@@ -1122,6 +1141,7 @@ model Assessment {
 
   @@index([courseOfferingId])
   @@index([componentId])
+  @@index([academicSemesterId])
 }
 
 model QuestionType {
@@ -1216,6 +1236,7 @@ model QuestionPaper {
 
   @@index([courseId])
   @@index([status])
+  @@index([academicSemesterId])
 }
 
 model QuestionPaperQuestion {
@@ -1233,6 +1254,7 @@ model QuestionPaperQuestion {
   isOptional      Boolean           @default(false)
 
   @@index([questionPaperId])
+  @@index([questionId])
 }
 
 model QuestionPaperApproval {
@@ -1288,6 +1310,7 @@ model CieConsolidation {
 
   @@unique([studentId, courseOfferingId, academicSemesterId])
   @@index([courseOfferingId])
+  @@index([academicSemesterId])
 }
 
 model ExamType {
@@ -1379,6 +1402,8 @@ model ExamEligibility {
 
   @@unique([examSessionId, studentId, courseId])
   @@index([studentId])
+  @@index([courseId])
+  @@index([examSessionId, courseId])
 }
 
 model ExamHallAllocation {
@@ -1395,6 +1420,7 @@ model ExamHallAllocation {
   @@unique([examId, studentId])
   @@unique([examId, roomId, seatNumber])
   @@index([roomId])
+  @@index([studentId])
 }
 
 model ExamInvigilator {
@@ -1409,6 +1435,7 @@ model ExamInvigilator {
 
   @@unique([examId, facultyId, roomId])
   @@index([facultyId])
+  @@index([roomId])
 }
 
 model ExamAttendance {
@@ -1452,6 +1479,7 @@ model Mark {
   @@unique([examSessionId, studentId, courseId])
   @@index([studentId])
   @@index([courseId])
+  @@index([examId])
 }
 
 model Grade {
@@ -1590,6 +1618,8 @@ model FeeStructure {
   @@index([academicYearId])
   @@index([departmentId])
   @@index([feeTypeId])
+  @@index([institutionId])
+  @@index([programId])
 }
 
 model StudentFee {
@@ -1623,6 +1653,8 @@ model StudentFee {
   @@index([academicYearId])
   @@index([feeTypeId])
   @@index([status])
+  @@index([feeStructureId])
+  @@index([academicSemesterId])
 }
 
 model FeeAdjustment {
@@ -1661,6 +1693,7 @@ model Payment {
   @@index([studentId])
   @@index([paymentDate])
   @@index([status])
+  @@index([studentFeeId])
 }
 
 model PaymentAllocation {
@@ -1673,6 +1706,7 @@ model PaymentAllocation {
   createdAt    DateTime   @default(now())
 
   @@index([studentFeeId])
+  @@index([paymentId])
 }
 
 model Receipt {
@@ -1722,6 +1756,7 @@ model LeaveRequest {
   @@index([status])
   @@index([userId])
   @@index([departmentId])
+  @@index([leaveTypeId])
 }
 
 model StaffAttendance {
@@ -1790,6 +1825,7 @@ model Announcement {
 
   @@index([audience])
   @@index([departmentId])
+  @@index([institutionId])
 }
 
 model CalendarEvent {
@@ -1818,6 +1854,7 @@ model CalendarEvent {
 
   @@index([eventDate])
   @@index([departmentId])
+  @@index([institutionId])
 }
 
 model Document {
@@ -1966,6 +2003,7 @@ model Scholarship {
   applications ScholarshipApplication[]
 
   @@index([deadline])
+  @@index([departmentId])
 }
 
 model ScholarshipApplication {
@@ -2176,6 +2214,7 @@ model AttainmentRecord {
 
   @@index([courseOfferingId])
   @@index([attainmentType])
+  @@index([academicSemesterId])
 }
 
 model AuditLog {

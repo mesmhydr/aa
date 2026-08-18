@@ -83,13 +83,16 @@ export async function markAttendance(input: z.infer<typeof attendanceSchema>) {
     }
     if (txOps.length > 0) await prisma.$transaction(txOps);
 
+    const created = toCreate.length;
+    const updated = d.entries.length - created;
+
     await logAudit({
       userId: access.userId, action: "attendance.create", module: "attendance",
       entityType: "CourseOffering", entityId: d.courseOfferingId,
       newValues: { date: d.date, periodNumber: d.periodNumber ?? null, count: d.entries.length },
     });
     revalidatePath("/attendance");
-    return { ok: true as const };
+    return { ok: true as const, created, updated };
   } catch (e) {
     return { ok: false as const, error: e instanceof Error ? e.message : "Failed" };
   }

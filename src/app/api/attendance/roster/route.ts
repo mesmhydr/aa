@@ -27,6 +27,15 @@ export async function GET(req: Request) {
   });
   const statusByStudent = new Map(records.map((r) => [r.studentId, r.status]));
 
+  // Which periods are already marked for this offering + date, so the form can
+  // tell the teacher "this class has been taken" instead of silently letting
+  // them create another period bucket.
+  const marked = await prisma.attendanceRecord.groupBy({
+    by: ["periodNumber"],
+    where: { courseOfferingId: offeringId, attendanceDate: date },
+    _count: { _all: true },
+  });
+
   const students = registrations.map((r) => ({
     id: r.studentId,
     name: r.student.user?.name ?? r.student.usn,
@@ -34,5 +43,9 @@ export async function GET(req: Request) {
     status: statusByStudent.get(r.studentId) ?? "PRESENT",
   }));
 
-  return Response.json({ students });
+  return Response.json({
+    students,
+    recordCount: records.length,
+    markedPeriods: marked.map((m) => m.periodNumber).sort((a, b) => (a ?? 0) - (b ?? 0)),
+  });
 }

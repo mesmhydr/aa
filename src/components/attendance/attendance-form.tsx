@@ -7,6 +7,13 @@ import { Badge, Button, Input, Label, Select } from "@/components/ui";
 
 const STATUSES = ["PRESENT", "ABSENT", "OD", "LEAVE", "MEDICAL"] as const;
 
+// Today's date in the browser's local timezone (toISOString would use UTC and
+// can roll back a day for early-morning marks in +05:30 etc.).
+function todayLocal(): string {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
 export function AttendanceMarkForm({ offerings, selectedOffering, selectedDate }: {
   offerings: Array<{ id: string; label: string }>;
   selectedOffering?: string;
@@ -14,24 +21,28 @@ export function AttendanceMarkForm({ offerings, selectedOffering, selectedDate }
 }) {
   const router = useRouter();
   const [offeringId, setOfferingId] = React.useState(selectedOffering ?? offerings[0]?.id ?? "");
-  const [date, setDate] = React.useState(selectedDate ?? new Date().toISOString().slice(0, 10));
+  const [date, setDate] = React.useState(selectedDate ?? todayLocal());
   const [period, setPeriod] = React.useState("1");
   const [students, setStudents] = React.useState<Array<{ id: string; name: string; usn: string; status: string }>>([]);
+  const [recordCount, setRecordCount] = React.useState(0);
+  const [markedPeriods, setMarkedPeriods] = React.useState<number[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [saved, setSaved] = React.useState(false);
+  const [savedMsg, setSavedMsg] = React.useState<string | null>(null);
 
   async function loadRoster() {
     if (!offeringId || !date) return;
     setLoading(true);
     setError(null);
-    setSaved(false);
+    setSavedMsg(null);
     try {
       const res = await fetch(`/api/attendance/roster?offering=${offeringId}&date=${date}&period=${period || "1"}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to load roster");
       setStudents(data.students);
+      setRecordCount(data.recordCount ?? 0);
+      setMarkedPeriods(Array.isArray(data.markedPeriods) ? data.markedPeriods : []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -56,7 +67,7 @@ export function AttendanceMarkForm({ offerings, selectedOffering, selectedDate }
     });
     setSaving(false);
     if (!res.ok) { setError(res.error); return; }
-    setSaved(true);
+    setSavedMsg(res.created > 0 ? `Saved — ${res.created} new record${res.created === 1 ? "" : "s"}${res.updated > 0 ? `, ${res.updated} updated` : ""}` : `${res.updated} records updated (no new records added)`);
     router.refresh();
   }
 
@@ -76,8 +87,19 @@ export function AttendanceMarkForm({ offerings, selectedOffering, selectedDate }
         <div className="space-y-2">
           <Label>Period (optional)</Label>
           <Input type="number" min={1} max={12} value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="1" />
+          {markedPeriods.length > 0 && !loading && (
+            <p className="text-xs text-muted-foreground">
+              Already marked on {date}: {markedPeriods.map((p) => p === null ? "no period" : `period ${p}`).join(", ")}
+            </p>
+          )}
         </div>
       </div>
+
+      {recordCount > 0 && !loading && (
+        <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
+          Attendance is already recorded for {recordCount} student{recordCount === 1 ? "" : "s"} on this date{period ? ` (period ${period})` : ""}. Saving will <strong>update</strong> those records, not add new ones.
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
@@ -93,7 +115,7 @@ export function AttendanceMarkForm({ offerings, selectedOffering, selectedDate }
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {saved && <p className="text-sm text-success">Attendance saved</p>}
+      {savedMsg && <p className="text-sm text-success">{savedMsg}</p>}
 
       <form onSubmit={onSubmit} className="space-y-4">
         {students.length > 0 && (
@@ -129,7 +151,9 @@ export function AttendanceMarkForm({ offerings, selectedOffering, selectedDate }
 
         {students.length > 0 && (
           <div className="flex justify-end">
-            <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save Attendance"}</Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? "Saving…" : recordCount > 0 ? "Update Attendance" : "Save Attendance"}
+            </Button>
           </div>
         )}
 
